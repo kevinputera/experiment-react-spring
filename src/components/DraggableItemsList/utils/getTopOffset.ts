@@ -6,6 +6,8 @@ interface GetTopOffsetOptions {
   index: number;
 }
 
+const INTER_ITEM_PADDING = 8;
+
 export const getTopOffset = ({
   items,
   getItemDimension,
@@ -19,5 +21,8 @@ export const getTopOffset = ({
       }
       return getItemDimension(item.key);
     })
-    .reduce((prev, dimension) => prev + dimension.height, 0);
+    .reduce(
+      (prev, dimension) => prev + dimension.height + INTER_ITEM_PADDING,
+      0
+    );
 };
