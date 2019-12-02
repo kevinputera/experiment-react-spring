@@ -1,14 +1,18 @@
 import styled from "styled-components";
 
-export interface DraggableItemsListContainerProps {
-  height: string;
-  width: string;
-}
+import { Dimension } from "../../typings";
+
+interface DraggableItemsListContainerProps extends Dimension {}
 
 // prettier-ignore
 // eslint-disable-next-line no-unexpected-multiline
 export const DraggableItemsListContainer = styled.div<DraggableItemsListContainerProps>`
-  display: relative;
-  height: ${({ height }) => height};
-  width: ${({ width }) => width};
+  height: ${({ height }) => height}px;
+  width: ${({ width }) => width}px;
+
+  position: relative;
+
+  & > * {
+    position: absolute;
+  }
 `;

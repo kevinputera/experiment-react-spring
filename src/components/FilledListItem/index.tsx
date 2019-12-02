@@ -1,12 +1,14 @@
 import styled from "styled-components";
 
-export interface FilledListItemProps {
+import { Dimension } from "../../typings";
+
+interface FilledListItemProps extends Dimension {
   fillColor: string;
 }
 
 export const FilledListItem = styled.div<FilledListItemProps>`
-  height: 80px;
-  width: 240px;
-  border-radius: 4px;
+  width: ${({ width }) => width}px;
+  height: ${({ height }) => height}px;
   background-color: ${({ fillColor }) => fillColor};
+  border-radius: 4px;
 `;

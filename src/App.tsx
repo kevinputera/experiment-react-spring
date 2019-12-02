@@ -12,19 +12,38 @@ const AppContainer = styled.div`
   justify-content: center;
 `;
 
-const ITEMS: React.ReactNode[] = [
-  <FilledListItem key="1" fillColor="#293742" />,
-  <FilledListItem key="2" fillColor="#5C7080" />,
-  <FilledListItem key="3" fillColor="#BFCCD6" />,
-  <FilledListItem key="4" fillColor="#D8E1E8" />
-];
+interface CustomItem {
+  key: string | number;
+  width: number;
+  height: number;
+  fillColor: string;
+}
 
 const App: React.FC = () => {
-  const [items, setItems] = useState(ITEMS);
+  const [items, setItems] = useState<CustomItem[]>([
+    { key: 1, width: 240, height: 80, fillColor: "#293742" },
+    { key: 2, width: 240, height: 80, fillColor: "#5C7080" },
+    { key: 3, width: 240, height: 80, fillColor: "#BFCCD6" },
+    { key: 4, width: 240, height: 80, fillColor: "#D8E1E8" }
+  ]);
+
+  const getItemDimension = useCallback(
+    (key: string | number) => {
+      const item = items.find(item => item.key.toString() === key.toString());
+      if (!item) {
+        throw new Error("Key is invalid");
+      }
+      return {
+        width: item.width,
+        height: item.height
+      };
+    },
+    [items]
+  );
 
   const moveItem = useCallback(
-    (item: React.ReactNode, position: number) => {
-      const currentIndex = items.indexOf(item);
+    (key: string | number, position: number) => {
+      const currentIndex = items.findIndex(item => item.key === key);
       if (position <= currentIndex) {
         setItems([
           ...items.slice(0, position),
@@ -46,9 +65,17 @@ const App: React.FC = () => {
 
   return (
     <AppContainer>
-      <DraggableItemsList moveItem={moveItem}>
-        {items.map(item => (
-          <DraggableItem />
+      <DraggableItemsList
+        moveItem={moveItem}
+        getChildDimension={getItemDimension}
+      >
+        {items.map(({ key, width, height, fillColor }) => (
+          <FilledListItem
+            key={key}
+            width={width}
+            height={height}
+            fillColor={fillColor}
+          />
         ))}
       </DraggableItemsList>
     </AppContainer>
