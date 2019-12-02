@@ -70,7 +70,8 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
         })
       );
 
-      if (!down && newIndex !== oldIndex) {
+      if (!down) {
+        moveItem(draggedKey, newIndex);
       }
     }
   );
@@ -88,13 +89,6 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
       }),
     [keyOrder, children.length, getChildDimension]
   );
-
-  useEffect(() => {
-    setInterval(() => {
-      console.log("Moving");
-      moveItem(1, 3);
-    }, 5000);
-  }, [moveItem]);
 
   return (
     <DraggableItemsListContainer
