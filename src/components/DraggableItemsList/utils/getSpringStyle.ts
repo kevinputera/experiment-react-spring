@@ -36,6 +36,7 @@ export const getSpringStyle = ({
       index !== draggedIndex
     ) {
       return {
+        cursor: "zoom-in",
         zIndex: 0,
         left: 0,
         top: getTopOffset({ items, getItemDimension, index }),
@@ -44,6 +45,7 @@ export const getSpringStyle = ({
       };
     }
     return {
+      cursor: "grabbing",
       zIndex: 1,
       left: xOffset,
       top: getTopOffset({ items, getItemDimension, index }) + yOffset,
