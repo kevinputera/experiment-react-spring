@@ -55,6 +55,7 @@ const App: React.FC = () => {
   return (
     <AppContainer>
       <DraggableItemsList
+        gutter={8}
         moveItem={moveItem}
         getChildDimension={getItemDimension}
       >

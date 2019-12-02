@@ -1,80 +1,61 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo } from "react";
 import { useSprings, animated } from "react-spring";
 import { useDrag } from "react-use-gesture";
 
 import { Dimension } from "../../typings";
 import { DraggableItemsListContainer } from "./DraggableItemsListContainer";
 import { clamp } from "../../utils";
-import { getTopOffset, getSpringStyle } from "./utils";
-import { useElementOrderDecoupler } from "./hooks";
+import { getSpringStyle } from "./utils";
 
 interface DraggableItemsListProps {
   children: React.ReactElement[];
+  gutter: number;
   getChildDimension: (key: string | number) => Dimension;
   moveItem: (key: string | number, to: number) => void;
 }
 
 export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
   children,
+  gutter,
   getChildDimension,
   moveItem
 }) => {
-  const {
-    unorderedElements: unorderedItems,
-    keyOrder,
-    moveKey
-  } = useElementOrderDecoupler(children);
+  const keyOrder = useMemo(() => children.map(child => child.key!), [children]);
 
   const [springs, setSprings] = useSprings(
     children.length,
     getSpringStyle({
-      unorderedItems,
       keyOrder,
+      gutter,
       getItemDimension: getChildDimension
     })
   );
-  useEffect(() => {
+
+  const bindDrag = useDrag(({ args: [draggedKey], down, movement: [x, y] }) => {
+    const draggedIndex = keyOrder.indexOf(draggedKey);
+    const newDraggedIndex = clamp({
+      data: Math.round((draggedIndex * 88 + y) / 88),
+      lower: 0,
+      upper: keyOrder.length - 1
+    });
+
     setSprings(
       getSpringStyle({
-        unorderedItems,
         keyOrder,
-        getItemDimension: getChildDimension
+        gutter,
+        getItemDimension: getChildDimension,
+        dragged: down,
+        draggedIndex,
+        newDraggedIndex,
+        xOffset: x,
+        yOffset: y
       })
     );
-  }, [unorderedItems, keyOrder, getChildDimension, setSprings]);
 
-  const bindDrag = useDrag(
-    ({ args: [draggedSpringIndex], down, movement: [x, y] }) => {
-      const draggedKey = unorderedItems[draggedSpringIndex].key!;
-
-      const oldIndex = keyOrder.indexOf(draggedKey);
-      const newIndex = clamp({
-        data: Math.round((oldIndex * 88 + y) / 88),
-        lower: 0,
-        upper: unorderedItems.length - 1
-      });
-
-      if (newIndex !== oldIndex) {
-        moveKey(draggedKey, newIndex);
-      }
-
-      setSprings(
-        getSpringStyle({
-          unorderedItems,
-          keyOrder,
-          getItemDimension: getChildDimension,
-          dragged: down,
-          draggedSpringIndex,
-          xOffset: x,
-          yOffset: y
-        })
-      );
-
-      if (!down) {
-        moveItem(draggedKey, newIndex);
-      }
+    if (!down && draggedIndex !== newDraggedIndex) {
+      moveItem(draggedKey, newDraggedIndex);
     }
-  );
+  });
 
   const containerWidth = useMemo(
     () => Math.max(...keyOrder.map(key => getChildDimension(key).width)),
@@ -82,12 +63,10 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
   );
   const containerHeight = useMemo(
     () =>
-      getTopOffset({
-        keyOrder,
-        index: children.length,
-        getItemDimension: getChildDimension
-      }),
-    [keyOrder, children.length, getChildDimension]
+      keyOrder
+        .map(key => getChildDimension(key))
+        .reduce((prev, dimension) => prev + dimension.height + gutter, 0),
+    [keyOrder, gutter, getChildDimension]
   );
 
   return (
@@ -95,9 +74,13 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
       width={containerWidth}
       height={containerHeight}
     >
-      {unorderedItems.map((item, index) => (
-        <animated.div {...bindDrag(index)} key={index} style={springs[index]}>
-          {item}
+      {children.map((child, index) => (
+        <animated.div
+          {...bindDrag(child.key!)}
+          key={index}
+          style={springs[index]}
+        >
+          {child}
         </animated.div>
       ))}
     </DraggableItemsListContainer>

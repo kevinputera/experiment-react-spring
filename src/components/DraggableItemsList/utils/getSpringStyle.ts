@@ -2,14 +2,16 @@ import { config } from "react-spring";
 
 import { getTopOffset } from "./getTopOffset";
 import { Dimension } from "../../../typings";
+import { shift } from "../../../utils";
 
 interface GetSpringStyleOptions {
-  unorderedItems: React.ReactElement[];
   keyOrder: (string | number)[];
+  gutter: number;
   getItemDimension: (key: string | number) => Dimension;
 
   dragged?: boolean;
-  draggedSpringIndex?: number;
+  draggedIndex?: number;
+  newDraggedIndex?: number;
   xOffset?: number;
   yOffset?: number;
 }
@@ -21,31 +23,39 @@ const SPRING_CONFIG = {
 };
 
 export const getSpringStyle = ({
-  unorderedItems,
   keyOrder,
+  gutter,
   getItemDimension,
   dragged,
-  draggedSpringIndex,
+  draggedIndex,
+  newDraggedIndex,
   xOffset,
   yOffset
 }: GetSpringStyleOptions) => {
-  const getItemIndexFromSpringIndex = (springIndex: number) => {
-    return keyOrder.indexOf(unorderedItems[springIndex].key!);
-  };
-
-  return (springIndex: number) => {
+  return (index: number) => {
     if (
       !dragged ||
-      draggedSpringIndex === undefined ||
+      draggedIndex === undefined ||
+      newDraggedIndex === undefined ||
       xOffset === undefined ||
       yOffset === undefined ||
-      springIndex !== draggedSpringIndex
+      index !== draggedIndex
     ) {
       return {
         left: 0,
         top: getTopOffset({
-          keyOrder,
-          index: getItemIndexFromSpringIndex(springIndex),
+          keyOrder:
+            draggedIndex !== undefined &&
+            newDraggedIndex !== undefined &&
+            newDraggedIndex !== draggedIndex
+              ? shift({
+                  items: keyOrder,
+                  from: draggedIndex,
+                  to: newDraggedIndex
+                })
+              : keyOrder,
+          key: keyOrder[index],
+          gutter,
           getItemDimension
         }),
         cursor: "zoom-in",
@@ -61,7 +71,8 @@ export const getSpringStyle = ({
       top:
         getTopOffset({
           keyOrder,
-          index: getItemIndexFromSpringIndex(springIndex),
+          key: keyOrder[draggedIndex],
+          gutter,
           getItemDimension
         }) + yOffset,
       cursor: "grabbing",
