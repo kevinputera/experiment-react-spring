@@ -1,26 +1,21 @@
 import { Dimension } from "../../../typings";
 
 interface GetTopOffsetOptions {
-  items: React.ReactElement[];
-  getItemDimension: (key: string | number) => Dimension;
+  keyOrder: (string | number)[];
   index: number;
+  getItemDimension: (key: string | number) => Dimension;
 }
 
 const INTER_ITEM_PADDING = 8;
 
 export const getTopOffset = ({
-  items,
-  getItemDimension,
-  index
+  keyOrder,
+  index,
+  getItemDimension
 }: GetTopOffsetOptions) => {
-  return items
+  return keyOrder
     .slice(0, index)
-    .map(item => {
-      if (!item.key) {
-        throw new Error("Children must have valid keys");
-      }
-      return getItemDimension(item.key);
-    })
+    .map(key => getItemDimension(key))
     .reduce(
       (prev, dimension) => prev + dimension.height + INTER_ITEM_PADDING,
       0

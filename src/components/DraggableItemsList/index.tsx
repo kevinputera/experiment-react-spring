@@ -1,11 +1,11 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { useSprings, animated } from "react-spring";
 import { useDrag } from "react-use-gesture";
 
 import { Dimension } from "../../typings";
 import { DraggableItemsListContainer } from "./DraggableItemsListContainer";
-import { getTopOffset } from "./utils";
-import { getSpringStyle } from "./utils/getSpringStyle";
+import { getTopOffset, getSpringStyle } from "./utils";
+import { useElementOrderDecoupler } from "./hooks";
 
 interface DraggableItemsListProps {
   children: React.ReactElement[];
@@ -18,19 +18,38 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
   getChildDimension,
   moveItem
 }) => {
+  const {
+    unorderedElements: unorderedItems,
+    keyOrder
+  } = useElementOrderDecoupler(children);
+
   const [springs, setSprings] = useSprings(
     children.length,
-    getSpringStyle({ items: children, getItemDimension: getChildDimension })
+    getSpringStyle({
+      unorderedItems,
+      keyOrder,
+      getItemDimension: getChildDimension
+    })
   );
+  useEffect(() => {
+    setSprings(
+      getSpringStyle({
+        unorderedItems,
+        keyOrder,
+        getItemDimension: getChildDimension
+      })
+    );
+  }, [unorderedItems, keyOrder, getChildDimension, setSprings]);
 
   const bindDrag = useDrag(
-    ({ args: [draggedIndex], down, movement: [x, y] }) => {
+    ({ args: [draggedSpringIndex], down, xy: [x, y] }) => {
       setSprings(
         getSpringStyle({
-          items: children,
+          unorderedItems,
+          keyOrder,
           getItemDimension: getChildDimension,
           dragged: down,
-          draggedIndex,
+          draggedSpringIndex,
           xOffset: x,
           yOffset: y
         })
@@ -39,18 +58,17 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
   );
 
   const containerWidth = useMemo(
-    () =>
-      Math.max(...children.map(child => getChildDimension(child.key!).width)),
-    [children, getChildDimension]
+    () => Math.max(...keyOrder.map(key => getChildDimension(key).width)),
+    [keyOrder, getChildDimension]
   );
   const containerHeight = useMemo(
     () =>
       getTopOffset({
-        items: children,
-        getItemDimension: getChildDimension,
-        index: children.length
+        keyOrder,
+        index: children.length,
+        getItemDimension: getChildDimension
       }),
-    [children, getChildDimension]
+    [keyOrder, children.length, getChildDimension]
   );
 
   return (
@@ -58,9 +76,9 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
       width={containerWidth}
       height={containerHeight}
     >
-      {children.map((child, index) => (
+      {unorderedItems.map((item, index) => (
         <animated.div {...bindDrag(index)} key={index} style={springs[index]}>
-          {child}
+          {item}
         </animated.div>
       ))}
     </DraggableItemsListContainer>

@@ -44,7 +44,9 @@ const App: React.FC = () => {
 
   const moveItem = useCallback(
     (key: string | number, to: number) => {
-      const from = items.findIndex(item => item.key === key);
+      const from = items.findIndex(
+        item => item.key.toString() === key.toString()
+      );
       setItems(shift({ items, from, to }));
     },
     [items, setItems]
