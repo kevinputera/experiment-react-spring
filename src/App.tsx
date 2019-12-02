@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import styled from "styled-components";
 
 import { DraggableItemsList, FilledListItem } from "./components";
+import { shift } from "./utils";
 
 const AppContainer = styled.div`
   height: 100%;
@@ -42,23 +43,9 @@ const App: React.FC = () => {
   );
 
   const moveItem = useCallback(
-    (key: string | number, position: number) => {
-      const currentIndex = items.findIndex(item => item.key === key);
-      if (position <= currentIndex) {
-        setItems([
-          ...items.slice(0, position),
-          items[currentIndex],
-          ...items.slice(position, currentIndex),
-          ...items.slice(currentIndex + 1)
-        ]);
-      } else {
-        setItems([
-          ...items.slice(0, currentIndex),
-          ...items.slice(currentIndex + 1, position + 1),
-          items[currentIndex],
-          ...items.slice(position + 1)
-        ]);
-      }
+    (key: string | number, to: number) => {
+      const from = items.findIndex(item => item.key === key);
+      setItems(shift({ items, from, to }));
     },
     [items, setItems]
   );
