@@ -10,5 +10,4 @@ export const FilledListItem = styled.div<FilledListItemProps>`
   width: ${({ width }) => width}px;
   height: ${({ height }) => height}px;
   background-color: ${({ fillColor }) => fillColor};
-  border-radius: 4px;
 `;

@@ -4,13 +4,14 @@ import { useDrag } from "react-use-gesture";
 
 import { Dimension } from "../../typings";
 import { DraggableItemsListContainer } from "./DraggableItemsListContainer";
+import { clamp } from "../../utils";
 import { getTopOffset, getSpringStyle } from "./utils";
 import { useElementOrderDecoupler } from "./hooks";
 
 interface DraggableItemsListProps {
   children: React.ReactElement[];
   getChildDimension: (key: string | number) => Dimension;
-  moveItem: (key: string | number, position: number) => void;
+  moveItem: (key: string | number, to: number) => void;
 }
 
 export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
@@ -20,7 +21,8 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
 }) => {
   const {
     unorderedElements: unorderedItems,
-    keyOrder
+    keyOrder,
+    moveKey
   } = useElementOrderDecoupler(children);
 
   const [springs, setSprings] = useSprings(
@@ -42,7 +44,20 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
   }, [unorderedItems, keyOrder, getChildDimension, setSprings]);
 
   const bindDrag = useDrag(
-    ({ args: [draggedSpringIndex], down, xy: [x, y] }) => {
+    ({ args: [draggedSpringIndex], down, movement: [x, y] }) => {
+      const draggedKey = unorderedItems[draggedSpringIndex].key!;
+
+      const oldIndex = keyOrder.indexOf(draggedKey);
+      const newIndex = clamp({
+        data: Math.round((oldIndex * 88 + y) / 88),
+        lower: 0,
+        upper: unorderedItems.length - 1
+      });
+
+      if (newIndex !== oldIndex) {
+        moveKey(draggedKey, newIndex);
+      }
+
       setSprings(
         getSpringStyle({
           unorderedItems,
@@ -54,6 +69,9 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
           yOffset: y
         })
       );
+
+      if (!down && newIndex !== oldIndex) {
+      }
     }
   );
 
@@ -70,6 +88,13 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
       }),
     [keyOrder, children.length, getChildDimension]
   );
+
+  useEffect(() => {
+    setInterval(() => {
+      console.log("Moving");
+      moveItem(1, 3);
+    }, 5000);
+  }, [moveItem]);
 
   return (
     <DraggableItemsListContainer

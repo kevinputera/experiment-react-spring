@@ -14,5 +14,7 @@ export const DraggableItemsListContainer = styled.div<DraggableItemsListContaine
 
   & > * {
     position: absolute;
+    border-radius: 4px;
+    overflow: hidden;
   }
 `;

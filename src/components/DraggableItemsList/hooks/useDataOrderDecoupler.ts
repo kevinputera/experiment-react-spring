@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
+
+import { shift } from "../../../utils";
 
 const sortElements = (elements: React.ReactElement[]) => {
   return [...elements].sort((a, b) => {
@@ -27,8 +29,16 @@ export const useElementOrderDecoupler = (
     setKeyOrder(extractKeyOrder(orderedElements));
   }, [orderedElements]);
 
+  const moveKey = useCallback(
+    (key: string | number, to: number) => {
+      setKeyOrder(shift({ items: keyOrder, from: keyOrder.indexOf(key), to }));
+    },
+    [keyOrder, setKeyOrder]
+  );
+
   return {
     unorderedElements: elements,
-    keyOrder
+    keyOrder,
+    moveKey
   };
 };

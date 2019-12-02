@@ -42,22 +42,21 @@ export const getSpringStyle = ({
       springIndex !== draggedSpringIndex
     ) {
       return {
-        cursor: "zoom-in",
-        zIndex: 0,
         left: 0,
         top: getTopOffset({
           keyOrder,
           index: getItemIndexFromSpringIndex(springIndex),
           getItemDimension
         }),
+        cursor: "zoom-in",
+        zIndex: 0,
         opacity: 1,
+        boxShadow: "rgba(0, 0, 0, 0.15) 0px 1px 2px 0px",
         immediate: () => false,
         config: SPRING_CONFIG
       };
     }
     return {
-      cursor: "grabbing",
-      zIndex: 1,
       left: xOffset,
       top:
         getTopOffset({
@@ -65,7 +64,10 @@ export const getSpringStyle = ({
           index: getItemIndexFromSpringIndex(springIndex),
           getItemDimension
         }) + yOffset,
-      opacity: 0.8,
+      cursor: "grabbing",
+      zIndex: 1,
+      opacity: 0.9,
+      boxShadow: "rgba(0, 0, 0, 0.15) 0px 4px 8px 0px",
       immediate: (key: string) => key === "left" || key === "top",
       config: SPRING_CONFIG
     };
