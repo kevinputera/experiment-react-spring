@@ -40,7 +40,8 @@ export const getSpringStyle = ({
         zIndex: 0,
         left: 0,
         top: getTopOffset({ items, getItemDimension, index }),
-        immediate: false,
+        opacity: 1,
+        immediate: () => false,
         config: SPRING_CONFIG
       };
     }
@@ -49,7 +50,8 @@ export const getSpringStyle = ({
       zIndex: 1,
       left: xOffset,
       top: getTopOffset({ items, getItemDimension, index }) + yOffset,
-      immediate: true,
+      opacity: 0.8,
+      immediate: (key: string) => key === "left" || key === "top",
       config: SPRING_CONFIG
     };
   };

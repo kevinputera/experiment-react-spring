@@ -40,14 +40,7 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
 
   const containerWidth = useMemo(
     () =>
-      Math.max(
-        ...children.map(child => {
-          if (!child.key) {
-            throw new Error("Children must have keys");
-          }
-          return getChildDimension(child.key).width;
-        })
-      ),
+      Math.max(...children.map(child => getChildDimension(child.key!).width)),
     [children, getChildDimension]
   );
   const containerHeight = useMemo(
