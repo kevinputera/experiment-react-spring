@@ -4,8 +4,9 @@ import { useDrag } from "react-use-gesture";
 
 import { Dimension } from "../../typings";
 import { DraggableItemsListContainer } from "./DraggableItemsListContainer";
-import { clamp } from "../../utils";
+import { clamp, shift } from "../../utils";
 import { getSpringStyle } from "./utils";
+import { useElementOrderDecoupler } from "./hooks";
 
 interface DraggableItemsListProps {
   children: React.ReactElement[];
@@ -20,42 +21,61 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
   getChildDimension,
   moveItem
 }) => {
-  const keyOrder = useMemo(() => children.map(child => child.key!), [children]);
+  const {
+    unorderedElements: unorderedItems,
+    keyOrder,
+    getKeyFromUnorderedIndex
+  } = useElementOrderDecoupler(children);
 
   const [springs, setSprings] = useSprings(
-    children.length,
+    unorderedItems.length,
     getSpringStyle({
       keyOrder,
       gutter,
-      getItemDimension: getChildDimension
+      getItemDimension: getChildDimension,
+      getKeyFromSpringIndex: getKeyFromUnorderedIndex
     })
   );
 
-  const bindDrag = useDrag(({ args: [draggedKey], down, movement: [x, y] }) => {
-    const draggedIndex = keyOrder.indexOf(draggedKey);
-    const newDraggedIndex = clamp({
-      data: Math.round((draggedIndex * 88 + y) / 88),
-      lower: 0,
-      upper: keyOrder.length - 1
-    });
+  const bindDrag = useDrag(
+    ({ args: [draggedSpringIndex], down, movement: [x, y] }) => {
+      const draggedKey = unorderedItems[draggedSpringIndex].key!;
 
-    setSprings(
-      getSpringStyle({
-        keyOrder,
-        gutter,
-        getItemDimension: getChildDimension,
-        dragged: down,
-        draggedIndex,
-        newDraggedIndex,
-        xOffset: x,
-        yOffset: y
-      })
-    );
+      const draggedIndex = keyOrder.indexOf(draggedKey);
+      const newDraggedIndex = clamp({
+        data: Math.round((draggedIndex * 88 + y) / 88),
+        lower: 0,
+        upper: keyOrder.length - 1
+      });
 
-    if (!down && draggedIndex !== newDraggedIndex) {
-      moveItem(draggedKey, newDraggedIndex);
+      let optimisticKeyOrder = keyOrder;
+      if (newDraggedIndex !== draggedIndex) {
+        optimisticKeyOrder = shift({
+          items: keyOrder,
+          from: draggedIndex,
+          to: newDraggedIndex
+        });
+      }
+
+      setSprings(
+        getSpringStyle({
+          keyOrder,
+          gutter,
+          getItemDimension: getChildDimension,
+          getKeyFromSpringIndex: getKeyFromUnorderedIndex,
+          optimisticKeyOrder,
+          dragged: down,
+          draggedSpringIndex,
+          xOffset: x,
+          yOffset: y
+        })
+      );
+
+      if (!down && draggedIndex !== newDraggedIndex) {
+        moveItem(draggedKey, newDraggedIndex);
+      }
     }
-  });
+  );
 
   const containerWidth = useMemo(
     () => Math.max(...keyOrder.map(key => getChildDimension(key).width)),
@@ -74,13 +94,9 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
       width={containerWidth}
       height={containerHeight}
     >
-      {children.map((child, index) => (
-        <animated.div
-          {...bindDrag(child.key!)}
-          key={index}
-          style={springs[index]}
-        >
-          {child}
+      {unorderedItems.map((item, index) => (
+        <animated.div {...bindDrag(index)} key={index} style={springs[index]}>
+          {item}
         </animated.div>
       ))}
     </DraggableItemsListContainer>

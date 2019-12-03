@@ -2,16 +2,16 @@ import { config } from "react-spring";
 
 import { getTopOffset } from "./getTopOffset";
 import { Dimension } from "../../../typings";
-import { shift } from "../../../utils";
 
 interface GetSpringStyleOptions {
   keyOrder: (string | number)[];
   gutter: number;
   getItemDimension: (key: string | number) => Dimension;
+  getKeyFromSpringIndex: (springIndex: number) => string | number;
 
+  optimisticKeyOrder?: (string | number)[];
   dragged?: boolean;
-  draggedIndex?: number;
-  newDraggedIndex?: number;
+  draggedSpringIndex?: number;
   xOffset?: number;
   yOffset?: number;
 }
@@ -26,35 +26,26 @@ export const getSpringStyle = ({
   keyOrder,
   gutter,
   getItemDimension,
+  getKeyFromSpringIndex,
+  optimisticKeyOrder,
   dragged,
-  draggedIndex,
-  newDraggedIndex,
+  draggedSpringIndex,
   xOffset,
   yOffset
 }: GetSpringStyleOptions) => {
-  return (index: number) => {
+  return (springIndex: number) => {
     if (
       !dragged ||
-      draggedIndex === undefined ||
-      newDraggedIndex === undefined ||
+      draggedSpringIndex === undefined ||
       xOffset === undefined ||
       yOffset === undefined ||
-      index !== draggedIndex
+      springIndex !== draggedSpringIndex
     ) {
       return {
         left: 0,
         top: getTopOffset({
-          keyOrder:
-            draggedIndex !== undefined &&
-            newDraggedIndex !== undefined &&
-            newDraggedIndex !== draggedIndex
-              ? shift({
-                  items: keyOrder,
-                  from: draggedIndex,
-                  to: newDraggedIndex
-                })
-              : keyOrder,
-          key: keyOrder[index],
+          keyOrder: optimisticKeyOrder ? optimisticKeyOrder : keyOrder,
+          key: getKeyFromSpringIndex(springIndex),
           gutter,
           getItemDimension
         }),
@@ -71,7 +62,7 @@ export const getSpringStyle = ({
       top:
         getTopOffset({
           keyOrder,
-          key: keyOrder[draggedIndex],
+          key: getKeyFromSpringIndex(springIndex),
           gutter,
           getItemDimension
         }) + yOffset,
