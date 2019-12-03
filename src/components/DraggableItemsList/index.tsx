@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { useSprings, animated } from "react-spring";
 import { useDrag } from "react-use-gesture";
 
@@ -36,6 +36,22 @@ export const DraggableItemsList: React.FC<DraggableItemsListProps> = ({
       getKeyFromSpringIndex: getKeyFromUnorderedIndex
     })
   );
+  useEffect(() => {
+    setSprings(
+      getSpringStyle({
+        keyOrder,
+        gutter,
+        getItemDimension: getChildDimension,
+        getKeyFromSpringIndex: getKeyFromUnorderedIndex
+      })
+    );
+  }, [
+    keyOrder,
+    gutter,
+    getChildDimension,
+    getKeyFromUnorderedIndex,
+    setSprings
+  ]);
 
   const bindDrag = useDrag(
     ({ args: [draggedSpringIndex], down, movement: [x, y] }) => {
